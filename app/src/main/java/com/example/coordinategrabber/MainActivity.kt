@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.coordinategrabber.components.Accordion
+import com.example.coordinategrabber.components.AppNavigationBar
 import com.example.coordinategrabber.data.database.UserQueries
 import com.example.coordinategrabber.data.model.Location
 import com.example.coordinategrabber.ui.theme.CoordinateGrabberTheme
@@ -94,13 +95,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             CoordinateGrabberTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    LocationScreen(
-                        modifier = Modifier.padding((innerPadding)),
-                        onGetLocation = {
-                            requestLocation()
-                        },
-                        locations = locations
-                    )
+//                    LocationScreen(
+//                        modifier = Modifier.padding((innerPadding)),
+//                        onGetLocation = {
+//                            requestLocation()
+//                        },
+//                        locations = locations
+//                    )
+                    AppNavigationBar(modifier = Modifier.fillMaxSize())
                 }
             }
         }
