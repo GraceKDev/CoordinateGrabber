@@ -11,6 +11,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -18,15 +19,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+
 import com.example.coordinategrabber.R
+import com.example.coordinategrabber.viewModel.LocationViewModel
 
 @Composable
 fun AppNavigationBar(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    locationViewModel: LocationViewModel
 ) {
     val navController = rememberNavController()
     val startDestination = Destination.HOME
@@ -72,7 +77,8 @@ fun AppNavigationBar(
     ) { contentPadding ->
         AppNavHost(
             navController = navController,
-            modifier = Modifier.padding(contentPadding)
+            modifier = Modifier.padding(contentPadding),
+            locationViewModel = locationViewModel
         )
     }
 }
@@ -80,7 +86,8 @@ fun AppNavigationBar(
 @Composable
 fun AppNavHost(
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    locationViewModel: LocationViewModel
 ) {
     NavHost(
         navController = navController,
@@ -96,7 +103,7 @@ fun AppNavHost(
         }
 
         composable(Destination.HISTORY.route) {
-            HistoryScreen()
+            HistoryScreen(locationViewModel =  locationViewModel)
         }
     }
 }
@@ -111,9 +118,25 @@ fun MapScreen() {
     PlaceholderScreen("Map Screen")
 }
 
+
+
 @Composable
-fun HistoryScreen() {
-    PlaceholderScreen("History Screen")
+fun HistoryScreen(
+    locationViewModel: LocationViewModel
+) {
+    val locations by locationViewModel.locations
+        .collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        locationViewModel.getLocation()
+    }
+
+    LocationScreen(
+        locations = locations,
+        onGetLocation = {
+            locationViewModel.getLocation()
+        }
+    )
 }
 
 @Composable

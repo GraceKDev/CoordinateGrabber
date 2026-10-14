@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.annotation.RequiresPermission
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
@@ -54,9 +55,13 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.coordinategrabber.components.Accordion
 import com.example.coordinategrabber.components.AppNavigationBar
+import com.example.coordinategrabber.components.LocationScreen
 import com.example.coordinategrabber.data.database.UserQueries
 import com.example.coordinategrabber.data.model.Location
+import com.example.coordinategrabber.location.LocationService
 import com.example.coordinategrabber.ui.theme.CoordinateGrabberTheme
+import com.example.coordinategrabber.viewModel.LocationViewModel
+import com.example.coordinategrabber.viewModel.LocationViewModelFactory
 
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.launch
@@ -68,91 +73,51 @@ import java.util.TimeZone
 import kotlin.collections.emptyList
 
 class MainActivity : ComponentActivity() {
-    private val locationClient by lazy {
-        LocationServices.getFusedLocationProviderClient(this)
+
+    private val locationService by lazy {
+        LocationService(this)
     }
-    private var locations by mutableStateOf<List<Location>>(emptyList())
-    private val userQueries by lazy { UserQueries(this) }
 
+    private val userQueries by lazy {
+        UserQueries(applicationContext)
+    }
 
+    private val locationViewModel: LocationViewModel by viewModels {
+        LocationViewModelFactory(userQueries, locationService)
+    }
     private val locationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) @androidx.annotation.RequiresPermission(
         allOf = [android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION]
     ) {
-        permissions ->
+            permissions ->
         val fineLocation = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
         val coarseLocation = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         if(fineLocation || coarseLocation) {
-//            getLocation()
+            lifecycleScope.launch {
+                locationService.getLocation()
+            }
         }
     }
+
 
     @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         enableEdgeToEdge()
-        getLocation()
+
         setContent {
             CoordinateGrabberTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-//                    LocationScreen(
-//                        modifier = Modifier.padding((innerPadding)),
-//                        onGetLocation = {
-//                            requestLocation()
-//                        },
-//                        locations = locations
-//                    )
-                    AppNavigationBar(modifier = Modifier.fillMaxSize())
-                }
-            }
-        }
-    }
-    private fun requestLocation() {
-        val fineLocationGranted = ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        val coarseLocationGranted = ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-        if(fineLocationGranted || coarseLocationGranted) {
-            getLocation()
-        } else {
-            locationPermissionLauncher.launch((
-                    arrayOf(
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    AppNavigationBar(
+                        modifier = Modifier.fillMaxSize(),
+                        locationViewModel = locationViewModel
                     )
-                    ))
-        }
-    }
-
-    @RequiresPermission(allOf = [Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION])
-    private fun getLocation() {
-        locationClient.lastLocation.addOnSuccessListener {
-            location ->
-            if(location != null) {
-                println("Latitude: ${location.latitude}")
-                println("Longitude: ${location.longitude}")
-                println("Accuracy: ${location.accuracy}")
-                val timeZone = TimeZone.getTimeZone("Asia/Bangkok")
-                val calendar = Calendar.getInstance(timeZone)
-                val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).apply {
-                    this.timeZone = timeZone
                 }
-                val formattedDate = formatter.format(calendar.time)
-                userQueries.addLocation(Location(lat=location.latitude, lon = location.longitude,date=formattedDate))
-                locations = userQueries.getAllLocations()
             }
         }
     }
-    private fun loadLocations() {
-        lifecycleScope.launch {
-            locations = userQueries.getAllLocations()
-        }
-    }
+
+
+
 }
 
 
@@ -161,29 +126,7 @@ class MainActivity : ComponentActivity() {
 
 
 
-@Composable
-fun LocationScreen(
-    modifier: Modifier = Modifier,
-    locations: List<Location>,
-    onGetLocation: () -> Unit
-) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(0.dp)
-    ) {
-        Button(
-            onClick = onGetLocation,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        ) {
-            Text("Get Location")
-        }
-        Accordion(
-            locations=locations,
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
+
 
 
 //@Composable
