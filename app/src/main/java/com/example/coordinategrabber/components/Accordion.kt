@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,7 +34,8 @@ import com.example.coordinategrabber.data.model.Location
 @Composable
 fun Accordion(
     modifier: Modifier = Modifier,
-    locations: List<Location>
+    locations: List<Location>,
+    onDeleteLocation: ((Int) -> Unit)? = null
 ) {
     var expanded by remember { mutableStateOf(false) }
     val arrowRotation by animateFloatAsState(
@@ -44,8 +43,11 @@ fun Accordion(
         animationSpec = tween(durationMillis = 300),
         label = "arrowRotation"
     )
-    Column(modifier = modifier.fillMaxWidth()
-        .background(MaterialTheme.colorScheme.primary),) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.primaryContainer)
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -53,21 +55,20 @@ fun Accordion(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Saved Coordinates")
+            Text(
+                text = "Saved Coordinates (${locations.size})",
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
 
             IconButton(
                 onClick = { expanded = !expanded }
             ) {
                 Icon(
-                    painter = painterResource(
-                        id = R.drawable.arrow_drop_down
-                    ),
-                    contentDescription = if (expanded) {
-                        "Collapse saved coordinates"
-                    } else {
-                        "Expand saved coordinates"
-                    },
-                    modifier = Modifier.size(24.dp)
+                    painter = painterResource(id = R.drawable.arrow_drop_down),
+                    contentDescription = if (expanded) "Collapse saved coordinates" else "Expand saved coordinates",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier
+                        .size(24.dp)
                         .graphicsLayer(rotationZ = arrowRotation)
                 )
             }
@@ -75,24 +76,30 @@ fun Accordion(
 
         AnimatedVisibility(
             visible = expanded,
-            enter = expandVertically(
-                expandFrom = Alignment.Top
-            ) + fadeIn(),
-            exit = shrinkVertically(
-                shrinkTowards = Alignment.Top
-            ) + fadeOut()
+            enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
+            exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut()
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
-                    .verticalScroll(rememberScrollState())
             ) {
-                locations.forEachIndexed { index, location ->
-                    LocationRow(
-                        location = location,
-                        index = index
+                if (locations.isEmpty()) {
+                    Text(
+                        text = "No saved coordinates yet",
+                        modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
+                } else {
+                    locations.forEachIndexed { index, location ->
+                        LocationRow(
+                            location = location,
+                            index = index,
+                            onDelete = if (location.id != null && onDeleteLocation != null) {
+                                { onDeleteLocation(location.id) }
+                            } else null
+                        )
+                    }
                 }
             }
         }

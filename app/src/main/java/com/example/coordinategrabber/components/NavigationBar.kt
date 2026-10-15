@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar as MaterialNavigationBar
 import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,6 +21,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -26,6 +30,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 
 import com.example.coordinategrabber.R
+import com.example.coordinategrabber.screen.LocationScreen
+import com.example.coordinategrabber.screen.MapScreen
+import com.example.coordinategrabber.screen.TrackingScreen
 import com.example.coordinategrabber.viewModel.LocationViewModel
 
 @Composable
@@ -44,7 +51,8 @@ fun AppNavigationBar(
         modifier = modifier,
         bottomBar = {
             MaterialNavigationBar(
-                windowInsets = NavigationBarDefaults.windowInsets
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                windowInsets = NavigationBarDefaults.windowInsets,
             ) {
                 Destination.entries.forEachIndexed { index, destination ->
                     NavigationBarItem(
@@ -68,8 +76,22 @@ fun AppNavigationBar(
                             )
                         },
                         label = {
-                            Text(destination.label)
-                        }
+                            Text(
+                                text = destination.label,
+                                fontWeight = if (selectedDestination == index) {
+                                    FontWeight.Bold
+                                } else {
+                                    FontWeight.Normal
+                                }
+                            )
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.onPrimary,
+                            selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                            indicatorColor = MaterialTheme.colorScheme.primary,
+                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     )
                 }
             }
@@ -77,7 +99,7 @@ fun AppNavigationBar(
     ) { contentPadding ->
         AppNavHost(
             navController = navController,
-            modifier = Modifier.padding(contentPadding),
+            modifier = Modifier.padding(bottom = contentPadding.calculateBottomPadding()),
             locationViewModel = locationViewModel
         )
     }
@@ -99,7 +121,15 @@ fun AppNavHost(
         }
 
         composable(Destination.MAP.route) {
-            MapScreen()
+            val locations by locationViewModel.locations.collectAsStateWithLifecycle()
+            LaunchedEffect(Unit) {
+                locationViewModel.loadLocations()
+            }
+            MapScreen(locations = locations)
+        }
+
+        composable(Destination.TRACK.route) {
+            TrackScreen(locationViewModel =  locationViewModel)
         }
 
         composable(Destination.HISTORY.route) {
@@ -110,13 +140,17 @@ fun AppNavHost(
 
 @Composable
 fun HomeScreen() {
-    PlaceholderScreen("Home Screen")
+    ScaffoldTemplate("Home") {
+        PlaceholderScreen("Home Screen")
+    }
 }
 
-@Composable
-fun MapScreen() {
-    PlaceholderScreen("Map Screen")
-}
+//@Composable
+//fun MapScreen() {
+//    ScaffoldTemplate("Map") {
+//        PlaceholderScreen("Map Screen")
+//    }
+//}
 
 
 
@@ -124,18 +158,19 @@ fun MapScreen() {
 fun HistoryScreen(
     locationViewModel: LocationViewModel
 ) {
-    val locations by locationViewModel.locations
+    val manualLocations by locationViewModel.manualLocations
+        .collectAsStateWithLifecycle()
+    val routes by locationViewModel.routes
         .collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        locationViewModel.getLocation()
+        locationViewModel.loadLocations()
     }
-
     LocationScreen(
-        locations = locations,
-        onGetLocation = {
-            locationViewModel.getLocation()
-        }
+        manualLocations = manualLocations,
+        routes = routes,
+        onDeleteLocation = { locationViewModel.deleteLocation(it) },
+        onDeleteRoute = { locationViewModel.deleteRoute(it) }
     )
 }
 
@@ -157,5 +192,7 @@ enum class Destination(
 ) {
     HOME("home", "Home", R.drawable.home, "Home"),
     MAP("map", "Map", R.drawable.globe, "Map"),
-    HISTORY("history", "History", R.drawable.history, "History")
+    TRACK("track", "Track", R.drawable.track, "Track"),
+    HISTORY("history", "History", R.drawable.history, "History"),
+
 }

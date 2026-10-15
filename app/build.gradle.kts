@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 android {
@@ -37,6 +38,8 @@ android {
 }
 
 dependencies {
+    implementation("androidx.compose.material:material-icons-core:1.7.8")
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
     implementation("androidx.compose.material:material:1.12.1")
     implementation("androidx.compose.material3:material3:1.4.0")
     implementation("androidx.compose.material3:material3-window-size-class:1.4.0")
@@ -45,6 +48,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.4.0")
     implementation("androidx.room:room-runtime:2.8.5")
     implementation("androidx.room:room-ktx:2.8.5")
+    implementation("com.google.maps.android:maps-compose:4.4.1")
     implementation(libs.androidx.compose.animation)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
@@ -65,3 +69,4 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
+
