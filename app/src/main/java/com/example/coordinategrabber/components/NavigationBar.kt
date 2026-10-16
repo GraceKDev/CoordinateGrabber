@@ -41,7 +41,7 @@ fun AppNavigationBar(
     locationViewModel: LocationViewModel
 ) {
     val navController = rememberNavController()
-    val startDestination = Destination.HOME
+    val startDestination = Destination.MAP
 
     var selectedDestination by rememberSaveable {
         mutableIntStateOf(startDestination.ordinal)
@@ -113,19 +113,20 @@ fun AppNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Destination.HOME.route,
+        startDestination = Destination.MAP.route,
         modifier = modifier
     ) {
-        composable(Destination.HOME.route) {
-            HomeScreen()
-        }
-
         composable(Destination.MAP.route) {
-            val locations by locationViewModel.locations.collectAsStateWithLifecycle()
+            val locations by locationViewModel.locations
+                .collectAsStateWithLifecycle()
+
             LaunchedEffect(Unit) {
                 locationViewModel.loadLocations()
             }
-            MapScreen(locations = locations)
+
+            MapScreen(
+                locations = locations
+            )
         }
 
         composable(Destination.TRACK.route) {
@@ -138,12 +139,7 @@ fun AppNavHost(
     }
 }
 
-@Composable
-fun HomeScreen() {
-    ScaffoldTemplate("Home") {
-        PlaceholderScreen("Home Screen")
-    }
-}
+
 
 //@Composable
 //fun MapScreen() {
@@ -190,7 +186,7 @@ enum class Destination(
     val icon: Int,
     val contentDescription: String
 ) {
-    HOME("home", "Home", R.drawable.home, "Home"),
+
     MAP("map", "Map", R.drawable.globe, "Map"),
     TRACK("track", "Track", R.drawable.track, "Track"),
     HISTORY("history", "History", R.drawable.history, "History"),

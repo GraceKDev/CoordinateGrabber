@@ -43,6 +43,7 @@ fun Accordion(
         animationSpec = tween(durationMillis = 300),
         label = "arrowRotation"
     )
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -95,8 +96,10 @@ fun Accordion(
                         LocationRow(
                             location = location,
                             index = index,
-                            onDelete = if (location.id != null && onDeleteLocation != null) {
-                                { onDeleteLocation(location.id) }
+                            onDelete = if (onDeleteLocation != null) {
+                                {
+                                    location.id?.let { id -> onDeleteLocation(id) }
+                                }
                             } else null
                         )
                     }

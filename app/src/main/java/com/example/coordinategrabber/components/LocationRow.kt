@@ -35,41 +35,36 @@ fun LocationRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .background(backgroundColor),
+            .background(backgroundColor)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(
-            modifier = Modifier.padding(
-                horizontal = 12.dp,
-                vertical = 4.dp
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = "Lat: ${location.lat}, Lon: ${location.lon}",
+                color = contentColor,
+                style = MaterialTheme.typography.bodyMedium
             )
-        ) {
-            Text("Lat: ${location.lat}", color = contentColor)
-            Text("Lon: ${location.lon}", color = contentColor)
-        }
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
             Text(
                 text = location.date,
                 color = contentColor,
-                modifier = Modifier.padding(horizontal = 8.dp)
+                style = MaterialTheme.typography.bodySmall
             )
+        }
 
-            if (onDelete != null) {
-                IconButton(
-                    onClick = onDelete,
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete Location",
-                        tint = contentColor
-                    )
-                }
+        if (onDelete != null) {
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier.size(40.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete Location",
+                    tint = contentColor
+                )
             }
         }
     }
