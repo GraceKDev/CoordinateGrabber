@@ -28,6 +28,10 @@ import com.google.maps.android.compose.Polygon
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
+import kotlin.math.atan
+import kotlin.math.exp
+import kotlin.math.ln
+import kotlin.math.tan
 
 @Composable
 fun MapScreen(
@@ -75,8 +79,6 @@ fun MapScreen(
             }
 
             val cameraTarget = cameraPositionState.position.target
-
-            // Fog bounds covering the active camera view area
             val fogBounds = remember(cameraTarget) {
                 val lat = cameraTarget.latitude
                 val lon = cameraTarget.longitude
@@ -90,12 +92,12 @@ fun MapScreen(
                 )
             }
 
-            // Generate merged 2D boolean union cutout holes to eliminate Venn diagram overlap fog
+
             val fogHoles = remember(locations) {
                 createMergedFogHoles(locations, radiusMeters = 350.0)
             }
 
-            // Solid opaque Fog of War layer with merged cutout holes
+
             Polygon(
                 points = fogBounds,
                 holes = fogHoles,
@@ -129,10 +131,6 @@ fun MapScreen(
     }
 }
 
-/**
- * Merges all discovery circles into unified outer contour boundaries using Path boolean UNION.
- * This completely eliminates the Venn diagram center overlap fog issue.
- */
 private fun createMergedFogHoles(
     locations: List<Location>,
     radiusMeters: Double = 350.0
@@ -181,13 +179,13 @@ private fun createMergedFogHoles(
 
 private fun latToY(latDeg: Double): Float {
     val latRad = Math.toRadians(latDeg.coerceIn(-85.0, 85.0))
-    val y = Math.log(Math.tan(Math.PI / 4.0 + latRad / 2.0))
+    val y = ln(tan(Math.PI / 4.0 + latRad / 2.0))
     return (y * 100000.0).toFloat()
 }
 
 private fun yToLat(y: Float): Double {
     val yNorm = y / 100000.0
-    val latRad = 2.0 * Math.atan(Math.exp(yNorm)) - Math.PI / 2.0
+    val latRad = 2.0 * atan(exp(yNorm)) - Math.PI / 2.0
     return Math.toDegrees(latRad)
 }
 

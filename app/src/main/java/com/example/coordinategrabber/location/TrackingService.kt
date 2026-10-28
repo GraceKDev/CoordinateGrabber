@@ -77,7 +77,7 @@ class TrackingService : Service() {
         trackingJob = serviceScope.launch {
             while (isActive && _isTracking.value) {
                 recordCurrentLocation(currentRouteId)
-                delay(30_000L.milliseconds)
+                delay(5_000L.milliseconds)
             }
         }
     }
@@ -134,7 +134,7 @@ class TrackingService : Service() {
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Location Tracking Active")
-            .setContentText("Recording location every 30 seconds...")
+            .setContentText("Recording location every 5 seconds...")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
@@ -145,7 +145,7 @@ class TrackingService : Service() {
     private fun getCurrentFormattedDate(): String {
         val timeZone = TimeZone.getTimeZone("Asia/Bangkok")
         val calendar = Calendar.getInstance(timeZone)
-        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).apply {
+        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).apply {
             this.timeZone = timeZone
         }
         return formatter.format(calendar.time)

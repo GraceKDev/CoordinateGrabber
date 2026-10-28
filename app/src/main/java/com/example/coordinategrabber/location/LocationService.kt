@@ -28,6 +28,8 @@ class LocationService(context: Context) {
             } else {
                 val request = CurrentLocationRequest.Builder()
                     .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+                    .setMaxUpdateAgeMillis(0)
+                    .setDurationMillis(20_000)
                     .build()
                 locationClient.getCurrentLocation(request, null).await()
             }

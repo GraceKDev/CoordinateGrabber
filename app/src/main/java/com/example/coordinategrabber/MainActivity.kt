@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
         val fineLocation = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
         val coarseLocation = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         if (fineLocation || coarseLocation) {
-            lifecycleScope.launch {
+            lifecycleScope.launch @androidx.annotation.RequiresPermission(allOf = [android.Manifest.permission.ACCESS_FINE_LOCATION, android.Manifest.permission.ACCESS_COARSE_LOCATION]) {
                 locationService.getLocation()
             }
         }
