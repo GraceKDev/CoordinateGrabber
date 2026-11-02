@@ -26,6 +26,7 @@ fun TrackingScreen(
     modifier: Modifier = Modifier,
     onGetLocation: () -> Unit,
     isTracking: Boolean,
+    hasPermission: Boolean = true,
     onTrackingChange: (Boolean) -> Unit
 ) {
     ScaffoldTemplate(
@@ -35,6 +36,7 @@ fun TrackingScreen(
             modifier = modifier,
             onGetLocation = onGetLocation,
             isTracking = isTracking,
+            hasPermission = hasPermission,
             onTrackingChange = onTrackingChange
         )
     }
@@ -45,6 +47,7 @@ fun TrackingScreenContent(
     modifier: Modifier = Modifier,
     onGetLocation: () -> Unit,
     isTracking: Boolean,
+    hasPermission: Boolean = true,
     onTrackingChange: (Boolean) -> Unit
 ) {
     Column(
@@ -75,26 +78,26 @@ fun TrackingScreenContent(
             ) {
                 Surface(
                     shape = CircleShape,
-                    color = if (isTracking) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.surfaceVariant
+                    color = when {
+                        !hasPermission -> MaterialTheme.colorScheme.errorContainer
+                        isTracking -> MaterialTheme.colorScheme.primary
+                        else -> MaterialTheme.colorScheme.surfaceVariant
                     }
                 ) {
                     Text(
-                        text = if (isTracking) {
-                            "Tracking active"
-                        } else {
-                            "Not tracking"
+                        text = when {
+                            !hasPermission -> "Permission required"
+                            isTracking -> "Tracking active"
+                            else -> "Not tracking"
                         },
                         modifier = Modifier.padding(
                             horizontal = 12.dp,
                             vertical = 6.dp
                         ),
-                        color = if (isTracking) {
-                            MaterialTheme.colorScheme.onPrimary
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
+                        color = when {
+                            !hasPermission -> MaterialTheme.colorScheme.onErrorContainer
+                            isTracking -> MaterialTheme.colorScheme.onPrimary
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
                         },
                         style = MaterialTheme.typography.labelMedium
                     )
@@ -107,17 +110,17 @@ fun TrackingScreenContent(
                 )
 
                 Text(
-                    text = if (isTracking) {
-                        "Your location is being tracked"
-                    } else {
-                        "Automatically track your location"
+                    text = when {
+                        !hasPermission -> "Location permission required to track"
+                        isTracking -> "Your location is being tracked"
+                        else -> "Automatically track your location"
                     },
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.bodyMedium
                 )
 
                 Switch(
-                    checked = isTracking,
+                    checked = if (hasPermission) isTracking else false,
                     onCheckedChange = onTrackingChange
                 )
             }
@@ -149,7 +152,7 @@ fun TrackingScreenContent(
                 )
 
                 Text(
-                    text = "Manually add a pin",
+                    text = if (hasPermission) "Manually add a pin" else "Location permission required to add pin",
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.bodyMedium
                 )

@@ -1,4 +1,3 @@
-
 package com.example.coordinategrabber.components
 
 import androidx.compose.foundation.layout.Box
@@ -22,23 +21,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-
 import com.example.coordinategrabber.R
 import com.example.coordinategrabber.screen.LocationScreen
 import com.example.coordinategrabber.screen.MapScreen
-import com.example.coordinategrabber.screen.TrackingScreen
+import com.example.coordinategrabber.screen.SettingsScreen
 import com.example.coordinategrabber.viewModel.LocationViewModel
+import com.example.coordinategrabber.viewModel.SettingsViewModel
 
 @Composable
 fun AppNavigationBar(
     modifier: Modifier = Modifier,
-    locationViewModel: LocationViewModel
+    locationViewModel: LocationViewModel,
+    settingsViewModel: SettingsViewModel,
+    onRequestPermission: () -> Unit = {}
 ) {
     val navController = rememberNavController()
     val startDestination = Destination.MAP
@@ -71,8 +71,7 @@ fun AppNavigationBar(
                         icon = {
                             Icon(
                                 painter = painterResource(destination.icon),
-                                contentDescription =
-                                    destination.contentDescription
+                                contentDescription = destination.contentDescription
                             )
                         },
                         label = {
@@ -100,7 +99,9 @@ fun AppNavigationBar(
         AppNavHost(
             navController = navController,
             modifier = Modifier.padding(bottom = contentPadding.calculateBottomPadding()),
-            locationViewModel = locationViewModel
+            locationViewModel = locationViewModel,
+            settingsViewModel = settingsViewModel,
+            onRequestPermission = onRequestPermission
         )
     }
 }
@@ -109,7 +110,9 @@ fun AppNavigationBar(
 fun AppNavHost(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    locationViewModel: LocationViewModel
+    locationViewModel: LocationViewModel,
+    settingsViewModel: SettingsViewModel,
+    onRequestPermission: () -> Unit = {}
 ) {
     NavHost(
         navController = navController,
@@ -130,25 +133,21 @@ fun AppNavHost(
         }
 
         composable(Destination.TRACK.route) {
-            TrackScreen(locationViewModel =  locationViewModel)
+            TrackScreen(
+                locationViewModel = locationViewModel,
+                onRequestPermission = onRequestPermission
+            )
         }
 
         composable(Destination.HISTORY.route) {
-            HistoryScreen(locationViewModel =  locationViewModel)
+            HistoryScreen(locationViewModel = locationViewModel)
+        }
+
+        composable(Destination.SETTINGS.route) {
+            SettingsScreen(settingsViewModel = settingsViewModel)
         }
     }
 }
-
-
-
-//@Composable
-//fun MapScreen() {
-//    ScaffoldTemplate("Map") {
-//        PlaceholderScreen("Map Screen")
-//    }
-//}
-
-
 
 @Composable
 fun HistoryScreen(
@@ -170,25 +169,14 @@ fun HistoryScreen(
     )
 }
 
-@Composable
-private fun PlaceholderScreen(title: String) {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(title)
-    }
-}
-
 enum class Destination(
     val route: String,
     val label: String,
     val icon: Int,
     val contentDescription: String
 ) {
-
     MAP("map", "Map", R.drawable.globe, "Map"),
     TRACK("track", "Track", R.drawable.track, "Track"),
     HISTORY("history", "History", R.drawable.history, "History"),
-
+    SETTINGS("setting", "Settings", R.drawable.settings, "Settings"),
 }

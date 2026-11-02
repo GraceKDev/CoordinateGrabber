@@ -22,17 +22,15 @@ class LocationService(context: Context) {
     )
     suspend fun getLocation(): Location? {
         return try {
-            val lastLoc = locationClient.lastLocation.await()
-            if (lastLoc != null) {
-                lastLoc
-            } else {
-                val request = CurrentLocationRequest.Builder()
-                    .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
-                    .setMaxUpdateAgeMillis(0)
-                    .setDurationMillis(20_000)
-                    .build()
-                locationClient.getCurrentLocation(request, null).await()
-            }
+            val request = CurrentLocationRequest.Builder()
+                .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+                .setMaxUpdateAgeMillis(0)
+                .setDurationMillis(30_000)
+                .build()
+            locationClient.getCurrentLocation(request, null).await()
+        } catch (e: SecurityException) {
+            e.printStackTrace()
+            null
         } catch (e: Exception) {
             e.printStackTrace()
             try {
