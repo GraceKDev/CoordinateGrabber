@@ -8,6 +8,7 @@ import androidx.annotation.RequiresPermission
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.coordinategrabber.data.database.UserQueries
+import com.example.coordinategrabber.data.export.CoordinateExportDTO
 import com.example.coordinategrabber.data.model.Location
 import com.example.coordinategrabber.data.model.Route
 import com.example.coordinategrabber.location.LocationService
@@ -70,6 +71,20 @@ class LocationViewModel(
     fun deleteRoute(routeId: Int) {
         viewModelScope.launch {
             userQueries.deleteRoute(routeId)
+            loadLocations()
+        }
+    }
+
+    fun deleteAllLocalData() {
+        viewModelScope.launch {
+            userQueries.deleteAllLocalData()
+            loadLocations()
+        }
+    }
+
+    fun importData(data: CoordinateExportDTO) {
+        viewModelScope.launch {
+            userQueries.importData(data.coordinates, data.routes)
             loadLocations()
         }
     }

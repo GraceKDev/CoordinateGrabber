@@ -2,6 +2,8 @@ package com.example.coordinategrabber.data.database
 
 import android.content.ContentValues
 import android.content.Context
+import com.example.coordinategrabber.data.export.CoordinateDTO
+import com.example.coordinategrabber.data.export.RouteDTO
 import com.example.coordinategrabber.data.model.Location
 import com.example.coordinategrabber.data.model.Route
 
@@ -54,6 +56,50 @@ class UserQueries(context: Context) {
                 "${MyDatabaseHelper.COLUMN_ID} = ?",
                 arrayOf(routeId.toString())
             )
+        }
+    }
+
+    fun deleteAllLocalData() {
+        dbHelper.writableDatabase.use { db ->
+            db.delete(MyDatabaseHelper.TABLE_COORDINATES, null, null)
+            db.delete(MyDatabaseHelper.TABLE_ROUTES, null, null)
+        }
+    }
+
+    fun importData(coordinates: List<CoordinateDTO>, routes: List<RouteDTO>) {
+        dbHelper.writableDatabase.use { db ->
+            db.beginTransaction()
+            try {
+                coordinates.forEach { dto ->
+                    val values = ContentValues().apply {
+                        put(MyDatabaseHelper.COLUMN_LAT, dto.latitude)
+                        put(MyDatabaseHelper.COLUMN_LON, dto.longitude)
+                        put(MyDatabaseHelper.COLUMN_DATE, dto.date)
+                    }
+                    db.insert(MyDatabaseHelper.TABLE_COORDINATES, null, values)
+                }
+
+                routes.forEach { routeDto ->
+                    val routeValues = ContentValues().apply {
+                        put(MyDatabaseHelper.COLUMN_ROUTE_NAME, routeDto.name)
+                        put(MyDatabaseHelper.COLUMN_ROUTE_DATE, routeDto.date)
+                    }
+                    val routeId = db.insert(MyDatabaseHelper.TABLE_ROUTES, null, routeValues).toInt()
+
+                    routeDto.points.forEach { pointDto ->
+                        val pointValues = ContentValues().apply {
+                            put(MyDatabaseHelper.COLUMN_ROUTE_ID, routeId)
+                            put(MyDatabaseHelper.COLUMN_LAT, pointDto.latitude)
+                            put(MyDatabaseHelper.COLUMN_LON, pointDto.longitude)
+                            put(MyDatabaseHelper.COLUMN_DATE, pointDto.date)
+                        }
+                        db.insert(MyDatabaseHelper.TABLE_COORDINATES, null, pointValues)
+                    }
+                }
+                db.setTransactionSuccessful()
+            } finally {
+                db.endTransaction()
+            }
         }
     }
 

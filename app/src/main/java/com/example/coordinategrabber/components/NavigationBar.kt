@@ -144,7 +144,20 @@ fun AppNavHost(
         }
 
         composable(Destination.SETTINGS.route) {
-            SettingsScreen(settingsViewModel = settingsViewModel)
+            val locations by locationViewModel.locations.collectAsStateWithLifecycle()
+            val routes by locationViewModel.routes.collectAsStateWithLifecycle()
+
+            LaunchedEffect(Unit) {
+                locationViewModel.loadLocations()
+            }
+
+            SettingsScreen(
+                settingsViewModel = settingsViewModel,
+                locations = locations,
+                routes = routes,
+                onDeleteLocalData = { locationViewModel.deleteAllLocalData() },
+                onImportData = { locationViewModel.importData(it) }
+            )
         }
     }
 }
