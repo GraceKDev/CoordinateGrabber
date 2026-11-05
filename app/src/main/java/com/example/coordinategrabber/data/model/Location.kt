@@ -5,5 +5,6 @@ data class Location(
     val routeId: Int? = null,
     val lat: Double,
     val lon: Double,
-    val date: String
+    val date: String,
+    val photoUri: String? = null
 )

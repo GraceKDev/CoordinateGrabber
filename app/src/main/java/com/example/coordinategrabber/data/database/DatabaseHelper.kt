@@ -13,7 +13,8 @@ public class MyDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATA
                 $COLUMN_LAT DOUBLE,
                 $COLUMN_LON DOUBLE,
                 $COLUMN_DATE STRING,
-                $COLUMN_ROUTE_ID INTEGER
+                $COLUMN_ROUTE_ID INTEGER,
+                $COLUMN_PHOTO_URI STRING
             )
         """.trimIndent()
 
@@ -30,14 +31,24 @@ public class MyDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATA
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        db.execSQL("DROP TABLE IF EXISTS $TABLE_COORDINATES")
-        db.execSQL("DROP TABLE IF EXISTS $TABLE_ROUTES")
-        onCreate(db)
+        if (oldVersion < 6) {
+            try {
+                db.execSQL("ALTER TABLE $TABLE_COORDINATES ADD COLUMN $COLUMN_PHOTO_URI STRING")
+            } catch (e: Exception) {
+                db.execSQL("DROP TABLE IF EXISTS $TABLE_COORDINATES")
+                db.execSQL("DROP TABLE IF EXISTS $TABLE_ROUTES")
+                onCreate(db)
+            }
+        } else {
+            db.execSQL("DROP TABLE IF EXISTS $TABLE_COORDINATES")
+            db.execSQL("DROP TABLE IF EXISTS $TABLE_ROUTES")
+            onCreate(db)
+        }
     }
 
     companion object {
         private const val DATABASE_NAME = "UserData.db"
-        private const val DATABASE_VER = 3
+        private const val DATABASE_VER = 6
 
         const val TABLE_COORDINATES = "Coordinates"
         const val COLUMN_ID = "id"
@@ -45,6 +56,7 @@ public class MyDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATA
         const val COLUMN_LON = "lon"
         const val COLUMN_DATE = "date"
         const val COLUMN_ROUTE_ID = "route_id"
+        const val COLUMN_PHOTO_URI = "photo_uri"
 
         const val TABLE_ROUTES = "Routes"
         const val COLUMN_ROUTE_NAME = "name"

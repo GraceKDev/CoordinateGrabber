@@ -3,7 +3,9 @@ package com.example.coordinategrabber.viewModel
 import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
+import android.widget.Toast
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,6 +14,7 @@ import com.example.coordinategrabber.data.export.CoordinateExportDTO
 import com.example.coordinategrabber.data.model.Location
 import com.example.coordinategrabber.data.model.Route
 import com.example.coordinategrabber.location.LocationService
+import com.example.coordinategrabber.location.PhotoLocationHelper
 import com.example.coordinategrabber.location.TrackingService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -86,6 +89,19 @@ class LocationViewModel(
         viewModelScope.launch {
             userQueries.importData(data.coordinates, data.routes)
             loadLocations()
+        }
+    }
+
+    fun addPhotoLocation(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            val result = PhotoLocationHelper.processPhotoUri(context, uri)
+            if (result != null) {
+                userQueries.addLocation(result.location)
+                loadLocations()
+                Toast.makeText(context, "Location extracted from photo EXIF metadata!", Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(context, "No EXIF location metadata found in this photo.", Toast.LENGTH_LONG).show()
+            }
         }
     }
 

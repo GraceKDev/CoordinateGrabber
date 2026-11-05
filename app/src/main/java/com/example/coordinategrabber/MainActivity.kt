@@ -63,17 +63,7 @@ class MainActivity : ComponentActivity() {
         val fineLocation = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
         val coarseLocation = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
 
-        if ((fineLocation || coarseLocation) && hasLocationPermission(this)) {
-            try {
-                locationViewModel.getLocation()
-            } catch (e: SecurityException) {
-                e.printStackTrace()
-                locationViewModel.setTracking(false, this)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        } else {
-            // Location permission was denied or restricted
+        if (!(fineLocation || coarseLocation)) {
             locationViewModel.setTracking(false, this)
         }
     }
@@ -86,6 +76,11 @@ class MainActivity : ComponentActivity() {
         }
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ungrantedPermissions.add(Manifest.permission.ACCESS_COARSE_LOCATION)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_MEDIA_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ungrantedPermissions.add(Manifest.permission.ACCESS_MEDIA_LOCATION)
+            }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -100,21 +95,16 @@ class MainActivity : ComponentActivity() {
             ) || ActivityCompat.shouldShowRequestPermissionRationale(
                 this,
                 Manifest.permission.ACCESS_COARSE_LOCATION
-            )
+            ) || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && ActivityCompat.shouldShowRequestPermissionRationale(
+                this,
+                Manifest.permission.ACCESS_MEDIA_LOCATION
+            ))
 
             if (!showRationale && hasRequestedPermissions) {
-                // Permissions permanently denied or dialog cannot show, open System Settings
                 openAppSettings()
             } else {
                 hasRequestedPermissions = true
                 locationPermissionLauncher.launch(ungrantedPermissions.toTypedArray())
-            }
-        } else {
-            // Permissions are already granted!
-            try {
-                locationViewModel.getLocation()
-            } catch (e: Exception) {
-                e.printStackTrace()
             }
         }
     }
@@ -131,20 +121,6 @@ class MainActivity : ComponentActivity() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-    }
-
-    private fun hasLocationPermission(context: Context): Boolean {
-        val fineGranted = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        val coarseGranted = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        return fineGranted || coarseGranted
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

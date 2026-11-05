@@ -29,6 +29,9 @@ class UserQueries(context: Context) {
                 location.routeId?.let {
                     put(MyDatabaseHelper.COLUMN_ROUTE_ID, it)
                 }
+                location.photoUri?.let {
+                    put(MyDatabaseHelper.COLUMN_PHOTO_URI, it)
+                }
             }
             db.insert(MyDatabaseHelper.TABLE_COORDINATES, null, values)
         }
@@ -116,18 +119,23 @@ class UserQueries(context: Context) {
             null,
             "${MyDatabaseHelper.COLUMN_ID} DESC"
         ).use { cursor ->
+            val photoUriIndex = cursor.getColumnIndex(MyDatabaseHelper.COLUMN_PHOTO_URI)
             while (cursor.moveToNext()) {
                 val id = cursor.getInt(cursor.getColumnIndexOrThrow(MyDatabaseHelper.COLUMN_ID))
                 val lat = cursor.getDouble(cursor.getColumnIndexOrThrow(MyDatabaseHelper.COLUMN_LAT))
                 val lon = cursor.getDouble(cursor.getColumnIndexOrThrow(MyDatabaseHelper.COLUMN_LON))
                 val date = cursor.getString(cursor.getColumnIndexOrThrow(MyDatabaseHelper.COLUMN_DATE))
+                val photoUri = if (photoUriIndex != -1 && !cursor.isNull(photoUriIndex)) {
+                    cursor.getString(photoUriIndex)
+                } else null
 
                 locationList.add(
                     Location(
                         id = id,
                         lat = lat,
                         lon = lon,
-                        date = date
+                        date = date,
+                        photoUri = photoUri
                     )
                 )
             }
@@ -180,11 +188,15 @@ class UserQueries(context: Context) {
             null,
             "${MyDatabaseHelper.COLUMN_ID} ASC"
         ).use { cursor ->
+            val photoUriIndex = cursor.getColumnIndex(MyDatabaseHelper.COLUMN_PHOTO_URI)
             while (cursor.moveToNext()) {
                 val id = cursor.getInt(cursor.getColumnIndexOrThrow(MyDatabaseHelper.COLUMN_ID))
                 val lat = cursor.getDouble(cursor.getColumnIndexOrThrow(MyDatabaseHelper.COLUMN_LAT))
                 val lon = cursor.getDouble(cursor.getColumnIndexOrThrow(MyDatabaseHelper.COLUMN_LON))
                 val date = cursor.getString(cursor.getColumnIndexOrThrow(MyDatabaseHelper.COLUMN_DATE))
+                val photoUri = if (photoUriIndex != -1 && !cursor.isNull(photoUriIndex)) {
+                    cursor.getString(photoUriIndex)
+                } else null
 
                 points.add(
                     Location(
@@ -192,7 +204,8 @@ class UserQueries(context: Context) {
                         routeId = routeId,
                         lat = lat,
                         lon = lon,
-                        date = date
+                        date = date,
+                        photoUri = photoUri
                     )
                 )
             }
@@ -213,6 +226,7 @@ class UserQueries(context: Context) {
             null,
             "${MyDatabaseHelper.COLUMN_ID} ASC"
         ).use { cursor ->
+            val photoUriIndex = cursor.getColumnIndex(MyDatabaseHelper.COLUMN_PHOTO_URI)
             while (cursor.moveToNext()) {
                 val id = cursor.getInt(cursor.getColumnIndexOrThrow(MyDatabaseHelper.COLUMN_ID))
                 val routeId = if (!cursor.isNull(cursor.getColumnIndexOrThrow(MyDatabaseHelper.COLUMN_ROUTE_ID))) {
@@ -221,6 +235,9 @@ class UserQueries(context: Context) {
                 val lat = cursor.getDouble(cursor.getColumnIndexOrThrow(MyDatabaseHelper.COLUMN_LAT))
                 val lon = cursor.getDouble(cursor.getColumnIndexOrThrow(MyDatabaseHelper.COLUMN_LON))
                 val date = cursor.getString(cursor.getColumnIndexOrThrow(MyDatabaseHelper.COLUMN_DATE))
+                val photoUri = if (photoUriIndex != -1 && !cursor.isNull(photoUriIndex)) {
+                    cursor.getString(photoUriIndex)
+                } else null
 
                 locationList.add(
                     Location(
@@ -228,7 +245,8 @@ class UserQueries(context: Context) {
                         routeId = routeId,
                         lat = lat,
                         lon = lon,
-                        date = date
+                        date = date,
+                        photoUri = photoUri
                     )
                 )
             }
