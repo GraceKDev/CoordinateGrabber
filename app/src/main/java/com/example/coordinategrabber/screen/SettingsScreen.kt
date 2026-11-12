@@ -40,6 +40,7 @@ import com.example.coordinategrabber.data.network.ApiEndpoints
 import com.example.coordinategrabber.viewModel.AuthState
 import com.example.coordinategrabber.viewModel.ExportState
 import com.example.coordinategrabber.viewModel.SettingsViewModel
+import com.example.coordinategrabber.ui.theme.LocalExtendedColors
 
 @Composable
 fun SettingsScreen(
@@ -77,7 +78,7 @@ fun SettingScreenContent(
     val userEmail by viewModel.userEmail.collectAsState()
     val exportState by viewModel.exportState.collectAsState()
     val authState by viewModel.authState.collectAsState()
-
+    val extColors = LocalExtendedColors.current
     var showExportConfirmationDialog by remember { mutableStateOf(false) }
     var showImportConfirmationDialog by remember { mutableStateOf(false) }
     var showDeleteServerDialog by remember { mutableStateOf(false) }
@@ -90,7 +91,7 @@ fun SettingScreenContent(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // App Theme Settings Card
+
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -118,7 +119,7 @@ fun SettingScreenContent(
             }
         }
 
-        // Account Session Card
+
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -142,9 +143,14 @@ fun SettingScreenContent(
                         text = if (userEmail.isNotBlank()) "Logged in as $userEmail" else "Logged in with Google",
                         style = MaterialTheme.typography.bodyMedium
                     )
-                    OutlinedButton(
+                    Button(
                         onClick = { viewModel.logout() },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = extColors.cancelButtonBackground,
+                            contentColor = extColors.cancelButtonText
+                        )
+
                     ) {
                         Text("Sign Out")
                     }
@@ -186,7 +192,6 @@ fun SettingScreenContent(
             }
         }
 
-        // Server Data Synchronization & Export Card (Visible when logged in)
         if (isLoggedIn) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -207,14 +212,20 @@ fun SettingScreenContent(
                     )
 
                     Text(
-                        text = "${locations.size} saved coordinates & ${routes.size} routes locally. Backend: ${ApiEndpoints.DEFAULT_BASE_URL}",
+                        text = "${locations.size} saved coordinates & ${routes.size} routes.",
                         style = MaterialTheme.typography.bodyMedium
                     )
+
+                    val extColors = LocalExtendedColors.current
 
                     Button(
                         onClick = { showExportConfirmationDialog = true },
                         enabled = exportState !is ExportState.Exporting,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = extColors.customButtonBackground,
+                            contentColor = extColors.customButtonText
+                        )
                     ) {
                         if (exportState is ExportState.Exporting) {
                             Row(
@@ -233,10 +244,14 @@ fun SettingScreenContent(
                         }
                     }
 
-                    OutlinedButton(
+                    Button(
                         onClick = { showImportConfirmationDialog = true },
                         enabled = exportState !is ExportState.Exporting,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = extColors.customButtonAltBackground,
+                            contentColor = extColors.customButtonText
+                        )
                     ) {
                         Text("Import Data from Server")
                     }
@@ -245,8 +260,8 @@ fun SettingScreenContent(
                         onClick = { showDeleteServerDialog = true },
                         enabled = exportState !is ExportState.Exporting,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error,
-                            contentColor = MaterialTheme.colorScheme.onError
+                            containerColor = extColors.cancelButtonBackground,
+                            contentColor = extColors.cancelButtonText
                         ),
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -294,7 +309,6 @@ fun SettingScreenContent(
             }
         }
 
-        // Local Storage Management Card
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -321,8 +335,8 @@ fun SettingScreenContent(
                 Button(
                     onClick = { showDeleteLocalDialog = true },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError
+                        containerColor = extColors.cancelButtonBackground,
+                        contentColor = extColors.cancelButtonText
                     ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -331,15 +345,13 @@ fun SettingScreenContent(
             }
         }
     }
-
-    // Dialog 1: Export Confirmation
     if (showExportConfirmationDialog) {
         AlertDialog(
             onDismissRequest = { showExportConfirmationDialog = false },
             title = { Text("Export Data") },
             text = {
                 Text(
-                    "Upload ${locations.size} coordinates and ${routes.size} routes to your backend at:\n\n${ApiEndpoints.DEFAULT_BASE_URL}"
+                    "Upload ${locations.size} coordinates and ${routes.size} routes to the cloud?"
                 )
             },
             confirmButton = {
@@ -366,14 +378,14 @@ fun SettingScreenContent(
         )
     }
 
-    // Dialog 2: Import Confirmation
+
     if (showImportConfirmationDialog) {
         AlertDialog(
             onDismissRequest = { showImportConfirmationDialog = false },
             title = { Text("Import Data from Server") },
             text = {
                 Text(
-                    "Pull coordinates and routes from the backend server (${ApiEndpoints.DEFAULT_BASE_URL}) and merge them with your local database?"
+                    "Import coordinates and routes from cloud?"
                 )
             },
             confirmButton = {
@@ -401,7 +413,6 @@ fun SettingScreenContent(
         )
     }
 
-    // Dialog 3: Delete Server Data Confirmation
     if (showDeleteServerDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteServerDialog = false },
@@ -435,7 +446,6 @@ fun SettingScreenContent(
         )
     }
 
-    // Dialog 4: Delete Local Data Confirmation
     if (showDeleteLocalDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteLocalDialog = false },

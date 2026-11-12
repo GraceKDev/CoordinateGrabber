@@ -6,5 +6,7 @@ data class Location(
     val lat: Double,
     val lon: Double,
     val date: String,
-    val photoUri: String? = null
+    val photoUri: String? = null,
+    val imageUrl: String? = null,
+    val backedUp: Boolean = false
 )

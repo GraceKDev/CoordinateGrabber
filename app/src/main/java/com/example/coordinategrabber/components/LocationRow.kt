@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Photo
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,19 +42,40 @@ fun LocationRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(
-            modifier = Modifier.weight(1f)
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(
-                text = "Lat: ${location.lat}, Lon: ${location.lon}",
-                color = contentColor,
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = location.date,
-                color = contentColor,
-                style = MaterialTheme.typography.bodySmall
-            )
+            if (!location.photoUri.isNullOrBlank()) {
+                Icon(
+                    imageVector = Icons.Default.Photo,
+                    contentDescription = "Has Photo",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            if (location.backedUp) {
+                Icon(
+                    imageVector = Icons.Default.CloudDone,
+                    contentDescription = "Backed up to server",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            Column {
+                Text(
+                    text = "Lat: ${location.lat}, Lon: ${location.lon}",
+                    color = contentColor,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = location.date,
+                    color = contentColor,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
         }
 
         if (onDelete != null) {

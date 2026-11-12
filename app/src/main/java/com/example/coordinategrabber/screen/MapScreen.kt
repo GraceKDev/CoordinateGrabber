@@ -5,6 +5,8 @@ import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PathMeasure
+import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,8 +15,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
@@ -57,6 +61,12 @@ import kotlin.math.atan
 import kotlin.math.exp
 import kotlin.math.ln
 import kotlin.math.tan
+
+sealed interface ImageLoadState {
+    data object Loading : ImageLoadState
+    data object Success : ImageLoadState
+    data class Error(val throwable: Throwable?) : ImageLoadState
+}
 
 @Composable
 fun MapScreen(
@@ -101,7 +111,7 @@ fun MapScreen(
 
     val filteredMarkerLocations = remember(markerLocations, showStandardPins, showPhotoPins) {
         markerLocations.filter { loc ->
-            val isPhoto = !loc.photoUri.isNullOrBlank()
+            val isPhoto = !loc.photoUri.isNullOrBlank() || !loc.imageUrl.isNullOrBlank()
             if (isPhoto) showPhotoPins else showStandardPins
         }
     }
@@ -166,7 +176,7 @@ fun MapScreen(
 
                 filteredMarkerLocations.forEach { location ->
                     val position = LatLng(location.lat, location.lon)
-                    val isPhoto = !location.photoUri.isNullOrBlank()
+                    val isPhoto = !location.photoUri.isNullOrBlank() || !location.imageUrl.isNullOrBlank()
                     val icon = if (isPhoto) blueCircleIcon else brownCircleIcon
 
                     Marker(
@@ -219,6 +229,29 @@ fun MapScreen(
     }
 
     selectedPhotoLocation?.let { photoLoc ->
+        val activeImageSource = remember(photoLoc) {
+            val source = if (!photoLoc.photoUri.isNullOrBlank()) {
+                Log.d("IMAGE_SOURCE_DEBUG", "Dialog loading image from LOCAL photoUri: ${photoLoc.photoUri}")
+                photoLoc.photoUri
+            } else if (!photoLoc.imageUrl.isNullOrBlank()) {
+                val rawUrl = photoLoc.imageUrl
+                val resolvedUrl = if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) {
+                    rawUrl
+                } else {
+                    val cleanPath = if (rawUrl.startsWith("/")) rawUrl else "/$rawUrl"
+                    "https://d20kcq05a1idts.cloudfront.net$cleanPath"
+                }
+                Log.d("IMAGE_SOURCE_DEBUG", "Dialog loading image from REMOTE imageUrl (CloudFront): $resolvedUrl")
+                resolvedUrl
+            } else {
+                Log.d("IMAGE_SOURCE_DEBUG", "Dialog image NOT FOUND for location: $photoLoc")
+                null
+            }
+            source
+        }
+
+        var imageLoadState by remember(activeImageSource) { mutableStateOf<ImageLoadState>(ImageLoadState.Loading) }
+
         AlertDialog(
             onDismissRequest = { selectedPhotoLocation = null },
             title = { Text("Photo Location") },
@@ -227,15 +260,63 @@ fun MapScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    AsyncImage(
-                        model = photoLoc.photoUri,
-                        contentDescription = "Location Photo",
-                        contentScale = ContentScale.Crop,
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(240.dp)
                             .clip(RoundedCornerShape(12.dp))
-                    )
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (activeImageSource != null) {
+                            AsyncImage(
+                                model = activeImageSource,
+                                contentDescription = "Location Photo",
+                                contentScale = ContentScale.Crop,
+                                onSuccess = {
+                                    imageLoadState = ImageLoadState.Success
+                                    Log.d("IMAGE_SOURCE_DEBUG", "AsyncImage successfully rendered image: $activeImageSource")
+                                },
+                                onError = { state ->
+                                    imageLoadState = ImageLoadState.Error(state.result.throwable)
+                                    Log.e("IMAGE_SOURCE_DEBUG", "AsyncImage failed to render image: $activeImageSource", state.result.throwable)
+                                },
+                                modifier = Modifier.fillMaxSize()
+                            )
+
+                            when (imageLoadState) {
+                                is ImageLoadState.Loading -> {
+                                    CircularProgressIndicator(modifier = Modifier.size(36.dp))
+                                }
+                                is ImageLoadState.Error -> {
+                                    Column(
+                                        modifier = Modifier.padding(12.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Text(
+                                            text = "Failed to load image",
+                                            color = MaterialTheme.colorScheme.error,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                        Text(
+                                            text = (imageLoadState as ImageLoadState.Error).throwable?.localizedMessage ?: "Network error / Unauthorized",
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            maxLines = 3
+                                        )
+                                    }
+                                }
+                                is ImageLoadState.Success -> { /* Nothing */ }
+                            }
+                        } else {
+                            Text(
+                                text = "Image not found",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
                     Text(
                         text = "Lat: ${photoLoc.lat}, Lon: ${photoLoc.lon}",
                         style = MaterialTheme.typography.bodyMedium
@@ -268,7 +349,7 @@ private fun downsampleLocationsForFog(
     var lastLoc: Location? = null
 
     for (loc in locations) {
-        if (lastLoc == null || distanceMeters(lastLoc.lat, lastLoc.lon, loc.lat, loc.lon) >= minDistanceMeters || loc.routeId == null || !loc.photoUri.isNullOrBlank()) {
+        if (lastLoc == null || distanceMeters(lastLoc.lat, lastLoc.lon, loc.lat, loc.lon) >= minDistanceMeters || loc.routeId == null || !loc.photoUri.isNullOrBlank() || !loc.imageUrl.isNullOrBlank()) {
             result.add(loc)
             lastLoc = loc
         }
@@ -279,7 +360,7 @@ private fun downsampleLocationsForFog(
 /**
  * Spatial downsampling for Markers: limits visible markers on screen to prevent
  * instantiating thousands of Compose Marker nodes on the UI thread.
- * Always includes photo locations (photoUri != null).
+ * Always includes photo locations (photoUri != null or imageUrl != null).
  */
 private fun downsampleLocationsForMarkers(
     locations: List<Location>,
@@ -290,7 +371,7 @@ private fun downsampleLocationsForMarkers(
     var lastLoc: Location? = null
 
     for (loc in locations) {
-        if (!loc.photoUri.isNullOrBlank() || loc.routeId == null || lastLoc == null || distanceMeters(lastLoc.lat, lastLoc.lon, loc.lat, loc.lon) >= minDistanceMeters) {
+        if (!loc.photoUri.isNullOrBlank() || !loc.imageUrl.isNullOrBlank() || loc.routeId == null || lastLoc == null || distanceMeters(lastLoc.lat, lastLoc.lon, loc.lat, loc.lon) >= minDistanceMeters) {
             result.add(loc)
             lastLoc = loc
         }

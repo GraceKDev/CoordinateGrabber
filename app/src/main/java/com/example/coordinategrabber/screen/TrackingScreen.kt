@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -23,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.coordinategrabber.components.ScaffoldTemplate
+import com.example.coordinategrabber.ui.theme.LocalExtendedColors
 
 @Composable
 fun TrackingScreen(
@@ -59,6 +61,8 @@ fun TrackingScreenContent(
     hasMediaPermission: Boolean = true,
     onTrackingChange: (Boolean) -> Unit
 ) {
+    val extColors = LocalExtendedColors.current
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -168,7 +172,11 @@ fun TrackingScreenContent(
                 )
 
                 Button(
-                    onClick = onGetLocation
+                    onClick = onGetLocation,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = extColors.customButtonBackground,
+                        contentColor = extColors.customButtonText
+                    )
                 ) {
                     Text("Add pin")
                 }
@@ -210,8 +218,14 @@ fun TrackingScreenContent(
                     style = MaterialTheme.typography.bodyMedium
                 )
 
-                OutlinedButton(
-                    onClick = onPickPhoto
+                Button(
+                    onClick = onPickPhoto,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = extColors.customButtonBackground,
+                        contentColor = extColors.customButtonText
+                    ),
+                    enabled = hasMediaPermission
+
                 ) {
                     Text(if (hasMediaPermission) "Select Photo" else "Grant Media Permission")
                 }

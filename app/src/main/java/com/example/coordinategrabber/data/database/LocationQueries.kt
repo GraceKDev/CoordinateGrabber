@@ -32,6 +32,10 @@ class UserQueries(context: Context) {
                 location.photoUri?.let {
                     put(MyDatabaseHelper.COLUMN_PHOTO_URI, it)
                 }
+                location.imageUrl?.let {
+                    put(MyDatabaseHelper.COLUMN_IMAGE_URL, it)
+                }
+                put(MyDatabaseHelper.COLUMN_BACKED_UP, if (location.backedUp) 1 else 0)
             }
             db.insert(MyDatabaseHelper.TABLE_COORDINATES, null, values)
         }
@@ -78,6 +82,8 @@ class UserQueries(context: Context) {
                         put(MyDatabaseHelper.COLUMN_LAT, dto.latitude)
                         put(MyDatabaseHelper.COLUMN_LON, dto.longitude)
                         put(MyDatabaseHelper.COLUMN_DATE, dto.date)
+                        dto.imageUrl?.let { put(MyDatabaseHelper.COLUMN_IMAGE_URL, it) }
+                        put(MyDatabaseHelper.COLUMN_BACKED_UP, 1)
                     }
                     db.insert(MyDatabaseHelper.TABLE_COORDINATES, null, values)
                 }
@@ -95,6 +101,8 @@ class UserQueries(context: Context) {
                             put(MyDatabaseHelper.COLUMN_LAT, pointDto.latitude)
                             put(MyDatabaseHelper.COLUMN_LON, pointDto.longitude)
                             put(MyDatabaseHelper.COLUMN_DATE, pointDto.date)
+                            pointDto.imageUrl?.let { put(MyDatabaseHelper.COLUMN_IMAGE_URL, it) }
+                            put(MyDatabaseHelper.COLUMN_BACKED_UP, 1)
                         }
                         db.insert(MyDatabaseHelper.TABLE_COORDINATES, null, pointValues)
                     }
@@ -120,6 +128,8 @@ class UserQueries(context: Context) {
             "${MyDatabaseHelper.COLUMN_ID} DESC"
         ).use { cursor ->
             val photoUriIndex = cursor.getColumnIndex(MyDatabaseHelper.COLUMN_PHOTO_URI)
+            val imageUrlIndex = cursor.getColumnIndex(MyDatabaseHelper.COLUMN_IMAGE_URL)
+            val backedUpIndex = cursor.getColumnIndex(MyDatabaseHelper.COLUMN_BACKED_UP)
             while (cursor.moveToNext()) {
                 val id = cursor.getInt(cursor.getColumnIndexOrThrow(MyDatabaseHelper.COLUMN_ID))
                 val lat = cursor.getDouble(cursor.getColumnIndexOrThrow(MyDatabaseHelper.COLUMN_LAT))
@@ -128,6 +138,12 @@ class UserQueries(context: Context) {
                 val photoUri = if (photoUriIndex != -1 && !cursor.isNull(photoUriIndex)) {
                     cursor.getString(photoUriIndex)
                 } else null
+                val imageUrl = if (imageUrlIndex != -1 && !cursor.isNull(imageUrlIndex)) {
+                    cursor.getString(imageUrlIndex)
+                } else null
+                val backedUp = if (backedUpIndex != -1 && !cursor.isNull(backedUpIndex)) {
+                    cursor.getInt(backedUpIndex) == 1
+                } else false
 
                 locationList.add(
                     Location(
@@ -135,7 +151,9 @@ class UserQueries(context: Context) {
                         lat = lat,
                         lon = lon,
                         date = date,
-                        photoUri = photoUri
+                        photoUri = photoUri,
+                        imageUrl = imageUrl,
+                        backedUp = backedUp
                     )
                 )
             }
@@ -189,6 +207,8 @@ class UserQueries(context: Context) {
             "${MyDatabaseHelper.COLUMN_ID} ASC"
         ).use { cursor ->
             val photoUriIndex = cursor.getColumnIndex(MyDatabaseHelper.COLUMN_PHOTO_URI)
+            val imageUrlIndex = cursor.getColumnIndex(MyDatabaseHelper.COLUMN_IMAGE_URL)
+            val backedUpIndex = cursor.getColumnIndex(MyDatabaseHelper.COLUMN_BACKED_UP)
             while (cursor.moveToNext()) {
                 val id = cursor.getInt(cursor.getColumnIndexOrThrow(MyDatabaseHelper.COLUMN_ID))
                 val lat = cursor.getDouble(cursor.getColumnIndexOrThrow(MyDatabaseHelper.COLUMN_LAT))
@@ -197,6 +217,12 @@ class UserQueries(context: Context) {
                 val photoUri = if (photoUriIndex != -1 && !cursor.isNull(photoUriIndex)) {
                     cursor.getString(photoUriIndex)
                 } else null
+                val imageUrl = if (imageUrlIndex != -1 && !cursor.isNull(imageUrlIndex)) {
+                    cursor.getString(imageUrlIndex)
+                } else null
+                val backedUp = if (backedUpIndex != -1 && !cursor.isNull(backedUpIndex)) {
+                    cursor.getInt(backedUpIndex) == 1
+                } else false
 
                 points.add(
                     Location(
@@ -205,7 +231,9 @@ class UserQueries(context: Context) {
                         lat = lat,
                         lon = lon,
                         date = date,
-                        photoUri = photoUri
+                        photoUri = photoUri,
+                        imageUrl = imageUrl,
+                        backedUp = backedUp
                     )
                 )
             }
@@ -227,6 +255,8 @@ class UserQueries(context: Context) {
             "${MyDatabaseHelper.COLUMN_ID} ASC"
         ).use { cursor ->
             val photoUriIndex = cursor.getColumnIndex(MyDatabaseHelper.COLUMN_PHOTO_URI)
+            val imageUrlIndex = cursor.getColumnIndex(MyDatabaseHelper.COLUMN_IMAGE_URL)
+            val backedUpIndex = cursor.getColumnIndex(MyDatabaseHelper.COLUMN_BACKED_UP)
             while (cursor.moveToNext()) {
                 val id = cursor.getInt(cursor.getColumnIndexOrThrow(MyDatabaseHelper.COLUMN_ID))
                 val routeId = if (!cursor.isNull(cursor.getColumnIndexOrThrow(MyDatabaseHelper.COLUMN_ROUTE_ID))) {
@@ -238,6 +268,12 @@ class UserQueries(context: Context) {
                 val photoUri = if (photoUriIndex != -1 && !cursor.isNull(photoUriIndex)) {
                     cursor.getString(photoUriIndex)
                 } else null
+                val imageUrl = if (imageUrlIndex != -1 && !cursor.isNull(imageUrlIndex)) {
+                    cursor.getString(imageUrlIndex)
+                } else null
+                val backedUp = if (backedUpIndex != -1 && !cursor.isNull(backedUpIndex)) {
+                    cursor.getInt(backedUpIndex) == 1
+                } else false
 
                 locationList.add(
                     Location(
@@ -246,7 +282,9 @@ class UserQueries(context: Context) {
                         lat = lat,
                         lon = lon,
                         date = date,
-                        photoUri = photoUri
+                        photoUri = photoUri,
+                        imageUrl = imageUrl,
+                        backedUp = backedUp
                     )
                 )
             }

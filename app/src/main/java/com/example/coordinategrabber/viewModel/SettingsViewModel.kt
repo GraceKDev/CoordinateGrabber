@@ -8,6 +8,8 @@ import com.example.coordinategrabber.data.export.CoordinateExportDTO
 import com.example.coordinategrabber.data.export.DataExporter
 import com.example.coordinategrabber.data.model.Location
 import com.example.coordinategrabber.data.model.Route
+import com.example.coordinategrabber.data.network.ApiEndpoints
+import com.example.coordinategrabber.data.network.CloudFrontManager
 import com.example.coordinategrabber.data.settings.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -98,6 +100,8 @@ class SettingsViewModel(
             result.fold(
                 onSuccess = { authResult ->
                     settingsRepository.saveAuthSession(authResult.userEmail, authResult.idToken)
+                    // Pre-fetch CloudFront cookies so they are warm in memory
+                    CloudFrontManager.fetchCookies(authResult.idToken, ApiEndpoints.DEFAULT_BASE_URL)
                     _authState.value = AuthState.Idle
                 },
                 onFailure = { err ->

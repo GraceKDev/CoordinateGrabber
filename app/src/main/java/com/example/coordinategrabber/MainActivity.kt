@@ -1,7 +1,6 @@
 package com.example.coordinategrabber
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -21,10 +20,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.datastore.preferences.preferencesDataStore
 import com.example.coordinategrabber.components.AppNavigationBar
 import com.example.coordinategrabber.data.database.UserQueries
 import com.example.coordinategrabber.data.settings.SettingsRepository
+import com.example.coordinategrabber.data.settings.appDataStore
 import com.example.coordinategrabber.location.LocationService
 import com.example.coordinategrabber.screen.LocationScreen
 import com.example.coordinategrabber.ui.theme.CoordinateGrabberTheme
@@ -50,12 +49,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private val settingsViewModel: SettingsViewModel by viewModels {
-        SettingsViewModelFactory(SettingsRepository(dataStore))
+        SettingsViewModelFactory(SettingsRepository(appDataStore))
     }
-
-    private val Context.dataStore by preferencesDataStore(
-        name = "settings"
-    )
 
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
