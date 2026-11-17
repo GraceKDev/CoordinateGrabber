@@ -1,6 +1,7 @@
 package com.example.coordinategrabber.data.network
 
 import android.util.Log
+import com.example.coordinategrabber.data.network.ApiEndpoints.buildUrl
 import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.Dispatchers
@@ -30,7 +31,7 @@ object CloudFrontManager {
                     .readTimeout(15, TimeUnit.SECONDS)
                     .build()
 
-                val targetUrl = ApiEndpoints.buildUrl("/api/images/access", serverUrl)
+                val targetUrl = buildUrl(buildUrl(ApiEndpoints.IMAGE_ACCESS))
                 val request = Request.Builder()
                     .url(targetUrl)
                     .get()
@@ -44,14 +45,9 @@ object CloudFrontManager {
                 val response = client.newCall(request).execute()
                 if (response.isSuccessful) {
                     val json = response.body?.string() ?: return@withContext null
-
                     val cookies = Gson().fromJson(json, CloudFrontCookies::class.java)
-                    Log.d("IMAGE_SOURCE_DEBUG", "${cookies}")
                     cachedCookies = cookies
-                    Log.d("IMAGE_SOURCE_DEBUG", "Successfully fetched new CloudFront cookies from /api/images/access")
                     return@withContext cookies
-                } else {
-                    Log.e("IMAGE_SOURCE_DEBUG", "Failed to fetch CloudFront cookies: HTTP ${response.code}")
                 }
             } catch (e: Exception) {
                 Log.e("IMAGE_SOURCE_DEBUG", "Exception fetching CloudFront cookies", e)
@@ -78,10 +74,8 @@ class CloudFrontInterceptor(
         val urlString = request.url.toString()
 
         if (urlString.contains("cloudfront.net")) {
-            Log.d("IMAGE_SOURCE_DEBUG", "=> Request intercepted for CLOUDFRONT S3 URL: $urlString")
             var cookies = CloudFrontManager.getCachedCookies()
             if (cookies == null) {
-                Log.d("IMAGE_SOURCE_DEBUG", "=> CloudFront cookies expired or missing. Fetching new cookies...")
                 val token = authTokenFlow()
                 val server = serverUrlFlow()
                 runBlocking(Dispatchers.IO) {
@@ -90,7 +84,6 @@ class CloudFrontInterceptor(
             }
 
             if (cookies != null) {
-                Log.d("IMAGE_SOURCE_DEBUG", "=> Attached CloudFront signed cookies to request for: $urlString")
                 val cookieHeader = "CloudFront-Policy=${cookies.policy}; " +
                     "CloudFront-Signature=${cookies.signature}; " +
                     "CloudFront-Key-Pair-Id=${cookies.keyPairId}"
@@ -98,11 +91,7 @@ class CloudFrontInterceptor(
                     .header("Cookie", cookieHeader)
                     .build()
                 return chain.proceed(modifiedRequest)
-            } else {
-                Log.e("IMAGE_SOURCE_DEBUG", "=> ERROR: Could not obtain CloudFront signed cookies for: $urlString")
             }
-        } else {
-            Log.d("IMAGE_SOURCE_DEBUG", "=> Request is LOCAL or non-CloudFront URL: $urlString")
         }
         return chain.proceed(request)
     }

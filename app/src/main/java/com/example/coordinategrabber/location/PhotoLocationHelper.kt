@@ -28,8 +28,6 @@ object PhotoLocationHelper {
         var longitude: Double? = null
         var photoDate: String? = null
 
-        // On Android 10+ (API 29+), pass uri through MediaStore.setRequireOriginal(uri)
-        // alongside ACCESS_MEDIA_LOCATION permission to prevent Android from scrubbing EXIF GPS metadata.
         val originalUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             try {
                 MediaStore.setRequireOriginal(uri)
@@ -60,11 +58,9 @@ object PhotoLocationHelper {
             e.printStackTrace()
         }
 
-        // If no EXIF GPS location metadata was found, FAIL immediately (do NOT use current device location)
         val latVal = latitude ?: return null
         val lonVal = longitude ?: return null
 
-        // Copy photo to internal app storage so Coil can access the file permanently without URI permission denial
         val savedFileUri = copyUriToInternalStorage(context, originalUri) ?: originalUri
         val dateToUse = photoDate ?: getCurrentFormattedDate()
 

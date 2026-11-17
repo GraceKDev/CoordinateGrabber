@@ -38,7 +38,6 @@ class MyDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
         } catch (e: Exception) {
             e.printStackTrace()
         }
-
         try {
             db.execSQL("ALTER TABLE $TABLE_COORDINATES ADD COLUMN $COLUMN_IMAGE_URL TEXT")
         } catch (e: Exception) {
@@ -55,7 +54,6 @@ class MyDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
     companion object {
         private const val DATABASE_NAME = "UserData.db"
         private const val DATABASE_VER = 9
-
         const val TABLE_COORDINATES = "Coordinates"
         const val COLUMN_ID = "id"
         const val COLUMN_LAT = "lat"
@@ -65,7 +63,6 @@ class MyDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NA
         const val COLUMN_PHOTO_URI = "photo_uri"
         const val COLUMN_IMAGE_URL = "image_url"
         const val COLUMN_BACKED_UP = "backed_up"
-
         const val TABLE_ROUTES = "Routes"
         const val COLUMN_ROUTE_NAME = "name"
         const val COLUMN_ROUTE_DATE = "date"

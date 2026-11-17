@@ -445,7 +445,6 @@ fun SettingScreenContent(
             }
         )
     }
-
     if (showDeleteLocalDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteLocalDialog = false },

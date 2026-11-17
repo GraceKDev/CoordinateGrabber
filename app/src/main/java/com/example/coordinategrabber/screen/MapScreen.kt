@@ -96,7 +96,7 @@ fun MapScreen(
         }
     }
 
-    // Compute merged fog holes asynchronously in background thread to avoid UI main thread lag
+
     val fogHoles by produceState<List<List<LatLng>>>(initialValue = emptyList(), key1 = locations) {
         value = withContext(Dispatchers.Default) {
             val downsampled = downsampleLocationsForFog(locations, minDistanceMeters = 50.0)
@@ -104,7 +104,7 @@ fun MapScreen(
         }
     }
 
-    // Filter locations for marker display to avoid creating thousands of Compose Marker nodes
+
     val markerLocations = remember(locations) {
         downsampleLocationsForMarkers(locations, minDistanceMeters = 150.0)
     }
@@ -117,7 +117,9 @@ fun MapScreen(
     }
 
     val pathPoints = remember(locations) {
-        locations.map { LatLng(it.lat, it.lon) }
+        locations
+            .filter { it.photoUri.isNullOrEmpty() && it.imageUrl.isNullOrEmpty() }
+            .map { LatLng(it.lat, it.lon) }
     }
 
     ScaffoldTemplate(topBarText = "Map") {
@@ -155,11 +157,10 @@ fun MapScreen(
                     )
                 }
 
-                // Solid opaque Fog of War layer with asynchronously calculated cutout holes
                 Polygon(
                     points = fogBounds,
                     holes = fogHoles,
-                    fillColor = Color(0xFF231A14), // Solid opaque dark mocha fog
+                    fillColor = Color(0xFF231A14),
                     strokeColor = Color.Transparent,
                     strokeWidth = 0f,
                     zIndex = 10f
@@ -198,7 +199,6 @@ fun MapScreen(
                 }
             }
 
-            // Floating Pin Filter Chips
             Row(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
@@ -336,10 +336,7 @@ fun MapScreen(
     }
 }
 
-/**
- * Spatial downsampling for Fog Holes: removes redundant duplicate/nearby points
- * within minDistanceMeters to reduce 5,000+ points into ~150-200 representative circles.
- */
+
 private fun downsampleLocationsForFog(
     locations: List<Location>,
     minDistanceMeters: Double = 50.0
@@ -357,11 +354,7 @@ private fun downsampleLocationsForFog(
     return result
 }
 
-/**
- * Spatial downsampling for Markers: limits visible markers on screen to prevent
- * instantiating thousands of Compose Marker nodes on the UI thread.
- * Always includes photo locations (photoUri != null or imageUrl != null).
- */
+
 private fun downsampleLocationsForMarkers(
     locations: List<Location>,
     minDistanceMeters: Double = 150.0
